@@ -115,3 +115,99 @@ class Ui(QMainWindow):
                 
                 print(name)
                 print(extension)
+    
+    def sendHash(self, main_window):
+        
+        hashcode = main_window.plainTextEdit_4.toPlainText()
+        print(hashcode)
+        url = main_window.txtUrl.toPlainText()
+        print(url)
+        payload = {'hashcode': hashcode, 'url': url}
+        print(payload)
+        r = requests.post("http://0.0.0.0:5000/hashValidate", params=payload)
+        #print(r.text)
+        #print(r.json())
+        data = r.json()
+        imgRaw = data['QR']
+        print(imgRaw)
+        
+        with open("imageToSave.png", "wb") as imgFile:
+            imgFile.write(base64.b64decode(imgRaw))
+        pixmap = QtGui.QPixmap('imageToSave.png')
+        main_window.lblQRImg.setPixmap(pixmap)
+        main_window.lblQRImg.setScaledContents(True)
+        #self.resize(370,370)
+        main_window.lblQRImg.setHidden(False)
+        pass
+    
+    def searchHash(self, main_window):
+        hashcode = main_window.plainTextEdit_4.toPlainText()
+        payload = {'hashcode': hashcode}
+        print(payload)
+        r = requests.post("http://0.0.0.0:5000/search_chain", params=payload)
+        data = r.json()
+        print(data)
+        imgRaw = data['message']
+        print(imgRaw)
+        
+        if data['message'] == 'Does not exist':
+            main_window.lblResult.setText('<html><head/><body><p align="center"><span style=" font-size:12pt;">Not found</span></p></body></html>')
+        else:
+            with open("imageToSave.png", "wb") as imgFile:
+                imgFile.write(base64.b64decode(imgRaw))
+            pixmap = QtGui.QPixmap('imageToSave.png')
+            main_window.lblQRImg.setPixmap(pixmap)
+            main_window.lblQRImg.setScaledContents(True)
+            #self.resize(370,370)
+            main_window.lblQRImg.setHidden(False)
+            main_window.lblResult.setText('<html><head/><body><p align="center"><span style=" font-size:12pt;">Found</span></p></body></html>')
+
+        pass
+    
+    def loginShow(self, main_window):
+        #Show txtUsername till login is required
+        self.txtUsername.setHidden(False)
+        #Show txtPassword till login is required
+        self.txtPassword.setHidden(False)
+        #Show btnCheck till login is required
+        self.btnCheck.setHidden(False)
+        #Show lblUser till login is required
+        self.lblUser.setHidden(False)
+        #Show lblPass till login is required
+        self.lblPass.setHidden(False)
+        
+        pass
+
+    def hash(self, data):
+        data = data.encode('utf8')
+        return str(hashlib.sha256(data).hexdigest())
+
+
+    def checkDetails(self, main_window):
+        #print("CheckDetails function active")
+        
+        username = self.txtUsername.toPlainText()
+        password = self.txtPassword.text()
+        print(self.hash(password))
+
+        #Post request to userBlockchain
+        payload = {'username': username, 'password': self.hash(password)}
+        print(payload)
+        r = requests.post("http://0.0.0.0:6000/search_chain", params=payload)
+        data = r.json()
+        print(data)
+
+        #Show Url textbox and label
+        if data['message'] == 'Valid':
+            #print("Valid")
+            self.txtUrl.setHidden(False)
+            self.lblUrl.setHidden(False)
+            self.btn_Run.setHidden(False)
+
+        pass
+
+
+if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
+    window = Ui()
+    sys.exit(app.exec_())
