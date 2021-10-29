@@ -95,4 +95,73 @@ class userBlockchain:
             block_index += 1
         return False
 
+# Part 2 - Mining our userBlockchain
+# Create a web app
+app = Flask(__name__)
+app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
+
+# Create a userBlockchain
+userBlockchain = userBlockchain()
+
+#default page 
+@app.route('/')
+def home():
+    return "<h1>UserBlockchain landing page</h1>"
+
+# mining a new block
+@app.route('/mine_block', methods = ['POST'])
+def mine_block():
+    username = request.args.get('username')
+    password = request.args.get('password')
+    prev_block = userBlockchain.get_prev_block()
+    prev_proof = prev_block['proof']
+    proof = userBlockchain.proof_of_work(prev_proof)
+    prev_hash = userBlockchain.hash(prev_block)
+
+
+    block = userBlockchain.create_block(proof, prev_hash, username, password)
+    response = {'message': 'Congradulations, added user to userBlockchain',
+                'index': block['index'],
+                'timestamp': block['timestamp'],
+                'proof': block['proof'],
+                'prev_hash': block['prev_hash']
+                }
+    print(jsonify(response))
+    return jsonify(response), 200
+
+# getting the full userBlockchain
+@app.route('/get_chain', methods={'GET'})
+def get_chain():
+    response = {'userBlockchain': userBlockchain.chain,
+                'length': len(userBlockchain.chain)}
+    return jsonify(response), 200
+
+#Checking if the chain is valid!!
+@app.route('/is_valid', methods = ['GET'])
+def is_valid():
+    is_valid = userBlockchain.is_chain_valid(userBlockchain.chain)
+    if is_valid:
+        response = {'message': 'userBlockchain is valid'}
+    else:
+        response = {'message': 'userBlockchain is not valid!!! :('}
+    return jsonify(response), 200
+
+@app.route('/search_chain', methods = ['POST'])
+def search_chain():
+    username = request.args.get('username')
+    password = request.args.get('password')
+    print(username)
+    print(password)
+
+    is_valid = userBlockchain.exists_in_chain(userBlockchain.chain, username, password)
+    if is_valid:
+        response = {'message': 'Valid'}
+    else:
+        response = {'message': 'Rejected'}
+    return jsonify(response), 200
+    
+    
+
+# Functions to run the application
+app.run(host='0.0.0.0', port=6000)
 
