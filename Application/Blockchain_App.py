@@ -10,7 +10,6 @@ from PyQt5 import QtWidgets, QtGui, uic
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QWidget, QPlainTextEdit, QMainWindow, QRadioButton, QMenuBar, QMenu, QDialog
 import sys
-from Blockchain_func import *
 import os
 import checksumdir
 import requests
