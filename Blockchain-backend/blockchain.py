@@ -102,4 +102,29 @@ class Blockchain:
             block_index += 1
         return data
 
+                
+    def createNFTQRcode(self, url):
+        logo_link = 'Hermes.png'
+        logo = Image.open(logo_link)
+        basewidth = 100
+        wpercent = (basewidth/float(logo.size[0]))
+        hsize = int((float(logo.size[1])*float(wpercent)))
+        logo = logo.resize((basewidth, hsize), Image.ANTIALIAS)
+        QRcode = qrcode.QRCode(
+            error_correction=qrcode.constants.ERROR_CORRECT_H
+        )
+        
+        QRcode.add_data(url)
+        QRcode.make()
+        QRcolor = 'Black'
+        QRimg = QRcode.make_image(
+            fill_color=QRcolor, back_color="white").convert('RGB')
+        pos = ((QRimg.size[0] - logo.size[0]) // 2,
+        (QRimg.size[1] - logo.size[1]) // 2)
+        QRimg.paste(logo, pos)
+        QRimg.save('NFT_QR_Image.png')
+        print("QR image generated!! :D")
+        with open("NFT_QR_Image.png", "rb") as imageFile:
+            imageString = base64.b64encode(imageFile.read())
+        return imageString.decode('utf-8')  
 
