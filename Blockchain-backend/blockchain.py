@@ -128,3 +128,76 @@ class Blockchain:
             imageString = base64.b64encode(imageFile.read())
         return imageString.decode('utf-8')  
 
+
+# Part 2 - Mining our blockchain
+# Create a web app
+app = Flask(__name__)
+app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
+
+
+# Create a blockchain
+blockchain = Blockchain()
+
+
+@app.route('/hashValidate', methods=['POST'])
+def hashValidate():
+    hashcode = request.args.get('hashcode')
+    #imgRawData = request.args.get('QR')
+    site = url = request.args.get('url')
+    #hashcode = blockchain.hash(hashcode)
+    #print(hashcode)
+    
+    prev_block = blockchain.get_prev_block()
+    prev_proof = prev_block['proof']
+    proof = blockchain.proof_of_work(prev_proof)
+    prev_hash = blockchain.hash(prev_block)
+
+    testHash = b""
+    
+    testHash = hashlib.sha256(testHash).hexdigest()
+    imgRawData = blockchain.createNFTQRcode(url)
+    block = blockchain.create_block(proof, prev_hash, hashcode, imgRawData, site)
+    response = {'message': 'Congradulations, successfully mined a block',
+                'index': block['index'],
+                'timestamp': block['timestamp'],
+                'proof': block['proof'],
+                'prev_hash': block['prev_hash'],
+                'TestHash': hashcode,
+                'QR': block['NftRawQR']}
+    print(jsonify(response))
+    return jsonify(response), 200
+
+
+# getting the full blockchain
+@app.route('/get_chain', methods={'GET'})
+def get_chain():
+    response = {'blockchain': blockchain.chain,
+                'length': len(blockchain.chain)}
+    return jsonify(response), 200
+
+#Checking if the chain is valid!!
+@app.route('/is_valid', methods = ['GET'])
+def is_valid():
+    is_valid = blockchain.is_chain_valid(blockchain.chain)
+    if is_valid:
+        response = {'message': 'Blockchain is valid'}
+    else:
+        response = {'message': 'Blockchain is not valid!!! :('}
+    return jsonify(response), 200
+
+@app.route('/search_chain', methods = ['POST'])
+def search_chain():
+    hashcode = request.args.get('hashcode')
+    #print(hashcode)
+    data = blockchain.exists_in_chain(blockchain.chain, hashcode)
+    if data == "":
+        response = {'message': 'Does not exist'}
+    else:
+        response = {'message': data}
+             
+    return jsonify(response), 200
+  
+    
+
+# Functions to run the application
+app.run(host='0.0.0.0', port=5000)
